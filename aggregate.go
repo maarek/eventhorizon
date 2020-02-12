@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -49,11 +49,12 @@ type Aggregate interface {
 
 // AggregateStore is responsible for loading and saving aggregates.
 type AggregateStore interface {
-	// Load loads the most recent version of an aggregate with a type and id.
-	Load(context.Context, AggregateType, uuid.UUID) (Aggregate, error)
+	// Reconstitute loads the most recent version of an aggregate with a type for
+	// an inbound command.
+	Reconstitute(context.Context, AggregateType, Command) (Aggregate, error)
 
-	// Save saves the uncommittend events for an aggregate.
-	Save(context.Context, Aggregate) error
+	// Storre saves the uncommittend events for an aggregate.
+	Store(context.Context, Aggregate) error
 }
 
 var aggregates = make(map[AggregateType]func(uuid.UUID) Aggregate)

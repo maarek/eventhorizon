@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	eh "github.com/looplab/eventhorizon"
 )
 
@@ -48,8 +47,9 @@ func NewAggregateStore(repo eh.ReadWriteRepo, bus eh.EventBus) (*AggregateStore,
 	return d, nil
 }
 
-// Load implements the Load method of the eventhorizon.AggregateStore interface.
-func (r *AggregateStore) Load(ctx context.Context, aggregateType eh.AggregateType, id uuid.UUID) (eh.Aggregate, error) {
+// Reconstitute implements the Reconstitute method of the eventhorizon.AggregateStore interface.
+func (r *AggregateStore) Reconstitute(ctx context.Context, aggregateType eh.AggregateType, cmd eh.Command) (eh.Aggregate, error) {
+	id := cmd.AggregateID()
 	item, err := r.repo.Find(ctx, id)
 	if rrErr, ok := err.(eh.RepoError); ok && rrErr.Err == eh.ErrEntityNotFound {
 		// Create the aggregate.
@@ -68,8 +68,8 @@ func (r *AggregateStore) Load(ctx context.Context, aggregateType eh.AggregateTyp
 	return aggregate, nil
 }
 
-// Save implements the Save method of the eventhorizon.AggregateStore interface.
-func (r *AggregateStore) Save(ctx context.Context, aggregate eh.Aggregate) error {
+// Store implements the Store method of the eventhorizon.AggregateStore interface.
+func (r *AggregateStore) Store(ctx context.Context, aggregate eh.Aggregate) error {
 	if err := r.repo.Save(ctx, aggregate); err != nil {
 		return err
 	}

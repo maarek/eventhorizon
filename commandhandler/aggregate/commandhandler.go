@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -59,7 +59,7 @@ func (h *CommandHandler) HandleCommand(ctx context.Context, cmd eh.Command) erro
 		return err
 	}
 
-	a, err := h.store.Load(ctx, h.t, cmd.AggregateID())
+	a, err := h.store.Reconstitute(ctx, h.t, cmd)
 	if err != nil {
 		return err
 	} else if a == nil {
@@ -70,5 +70,5 @@ func (h *CommandHandler) HandleCommand(ctx context.Context, cmd eh.Command) erro
 		return err
 	}
 
-	return h.store.Save(ctx, a)
+	return h.store.Store(ctx, a)
 }

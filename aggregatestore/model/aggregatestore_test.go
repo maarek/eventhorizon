@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -55,8 +55,11 @@ func TestAggregateStore_LoadNotFound(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
+	cmd := TestCommand{
+		id: id,
+	}
 	repo.LoadErr = eh.RepoError{Err: eh.ErrEntityNotFound}
-	agg, err := store.Load(ctx, AggregateType, id)
+	agg, err := store.Reconstitute(ctx, AggregateType, cmd)
 	if err != nil {
 		t.Fatal("there should be no error:", err)
 	}
@@ -71,9 +74,12 @@ func TestAggregateStore_Load(t *testing.T) {
 	ctx := context.Background()
 
 	id := uuid.New()
+	cmd := TestCommand{
+		id: id,
+	}
 	agg := NewAggregate(id)
 	repo.Entity = agg
-	loadedAgg, err := store.Load(ctx, AggregateType, id)
+	loadedAgg, err := store.Reconstitute(ctx, AggregateType, cmd)
 	if err != nil {
 		t.Fatal("there should be no error:", err)
 	}
@@ -83,7 +89,7 @@ func TestAggregateStore_Load(t *testing.T) {
 
 	// Store error.
 	repo.LoadErr = errors.New("error")
-	_, err = store.Load(ctx, AggregateType, id)
+	_, err = store.Reconstitute(ctx, AggregateType, cmd)
 	if err == nil || err.Error() != "error" {
 		t.Error("there should be an error named 'error':", err)
 	}
@@ -103,7 +109,10 @@ func TestAggregateStore_Load_InvalidAggregate(t *testing.T) {
 		t.Error("there should be no error:", err)
 	}
 
-	loadedAgg, err := store.Load(ctx, AggregateType, id)
+	cmd := TestCommand{
+		id: id,
+	}
+	loadedAgg, err := store.Reconstitute(ctx, AggregateType, cmd)
 	if err != ErrInvalidAggregate {
 		t.Fatal("there should be a ErrInvalidAggregate error:", err)
 	}
@@ -119,7 +128,7 @@ func TestAggregateStore_Save(t *testing.T) {
 
 	id := uuid.New()
 	agg := NewAggregate(id)
-	err := store.Save(ctx, agg)
+	err := store.Store(ctx, agg)
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -129,7 +138,7 @@ func TestAggregateStore_Save(t *testing.T) {
 
 	// Store error.
 	repo.SaveErr = errors.New("aggregate error")
-	err = store.Save(ctx, agg)
+	err = store.Store(ctx, agg)
 	if err == nil || err.Error() != "aggregate error" {
 		t.Error("there should be an error named 'error':", err)
 	}
@@ -149,7 +158,7 @@ func TestAggregateStore_SaveWithPublish(t *testing.T) {
 	if len(agg.SliceEventPublisher) != 1 {
 		t.Error("there should be one event to publish")
 	}
-	err := store.Save(ctx, agg)
+	err := store.Store(ctx, agg)
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -166,7 +175,7 @@ func TestAggregateStore_SaveWithPublish(t *testing.T) {
 	// Simulate a bus error.
 	bus.Err = errors.New("bus error")
 	agg.PublishEvent(event)
-	err = store.Save(ctx, agg)
+	err = store.Store(ctx, agg)
 	if err == nil || err.Error() != "bus error" {
 		t.Error("there should be an error named 'error':", err)
 	}
@@ -260,3 +269,25 @@ var _ = eh.Entity(&Model{})
 func (m *Model) EntityID() uuid.UUID {
 	return m.ID
 }
+
+const TestCommandType eh.CommandType = "TestCommand"
+
+type TestCommand struct {
+	id uuid.UUID
+}
+
+var _ = eh.Command(TestCommand{})
+
+func (a TestCommand) AggregateID() uuid.UUID          { return a.id }
+func (a TestCommand) AggregateType() eh.AggregateType { return AggregateType }
+func (a TestCommand) CommandType() eh.CommandType     { return TestCommandType }
+
+type TestOtherCommand struct {
+	id uuid.UUID
+}
+
+var _ = eh.Command(TestCommand{})
+
+func (a TestOtherCommand) AggregateID() uuid.UUID          { return a.id }
+func (a TestOtherCommand) AggregateType() eh.AggregateType { return AggregateOtherType }
+func (a TestOtherCommand) CommandType() eh.CommandType     { return TestCommandType }

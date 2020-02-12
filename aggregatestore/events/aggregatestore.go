@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ import (
 	"context"
 	"errors"
 
-	"github.com/google/uuid"
 	eh "github.com/looplab/eventhorizon"
 )
 
@@ -75,6 +74,15 @@ type Aggregate interface {
 	ApplyEvent(context.Context, eh.Event) error
 }
 
+// AggregateModifier provides an interface to modify the agregate during
+// load and save operations.
+type AggregateModifier interface {
+	// After loading the event stream, allow for the modification of the loaded
+	// events. This allows updates to the stream such as sorting and filtering
+	// based on information from the command.
+	ModifyAfterLoad(context.Context, []eh.Event, eh.Command) []eh.Event
+}
+
 // AggregateStore is an aggregate store using event sourcing. It
 // uses an event store for loading and saving events used to build the aggregate.
 type AggregateStore struct {
@@ -100,12 +108,12 @@ func NewAggregateStore(store eh.EventStore, bus eh.EventBus) (*AggregateStore, e
 	return d, nil
 }
 
-// Load implements the Load method of the eventhorizon.AggregateStore interface.
+// Reconstitute implements the Reconstitute method of the eventhorizon.AggregateStore interface.
 // It loads an aggregate from the event store by creating a new aggregate of the
-// type with the ID and then applies all events to it, thus making it the most
+// type with the command's ID and then applies all events to it, thus making it the most
 // current version of the aggregate.
-func (r *AggregateStore) Load(ctx context.Context, aggregateType eh.AggregateType, id uuid.UUID) (eh.Aggregate, error) {
-	agg, err := eh.CreateAggregate(aggregateType, id)
+func (r *AggregateStore) Reconstitute(ctx context.Context, aggregateType eh.AggregateType, cmd eh.Command) (eh.Aggregate, error) {
+	agg, err := eh.CreateAggregate(aggregateType, cmd.AggregateID())
 	if err != nil {
 		return nil, err
 	}
@@ -119,6 +127,10 @@ func (r *AggregateStore) Load(ctx context.Context, aggregateType eh.AggregateTyp
 		return nil, err
 	}
 
+	if ma, ok := a.(AggregateModifier); ok {
+		events = ma.ModifyAfterLoad(ctx, events, cmd)
+	}
+
 	if err := r.applyEvents(ctx, a, events); err != nil {
 		return nil, err
 	}
@@ -126,9 +138,9 @@ func (r *AggregateStore) Load(ctx context.Context, aggregateType eh.AggregateTyp
 	return a, nil
 }
 
-// Save implements the Save method of the eventhorizon.AggregateStore interface.
+// Store implements the Store method of the eventhorizon.AggregateStore interface.
 // It saves all uncommitted events from an aggregate to the event store.
-func (r *AggregateStore) Save(ctx context.Context, agg eh.Aggregate) error {
+func (r *AggregateStore) Store(ctx context.Context, agg eh.Aggregate) error {
 	a, ok := agg.(Aggregate)
 	if !ok {
 		return ErrInvalidAggregateType

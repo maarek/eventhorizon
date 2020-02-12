@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -254,17 +254,17 @@ type AggregateStore struct {
 
 var _ = eh.AggregateStore(&AggregateStore{})
 
-// Load implements the Load method of the eventhorizon.AggregateStore interface.
-func (m *AggregateStore) Load(ctx context.Context, aggregateType eh.AggregateType, id uuid.UUID) (eh.Aggregate, error) {
+// Reconstitute implements the Reconstitute method of the eventhorizon.AggregateStore interface.
+func (m *AggregateStore) Reconstitute(ctx context.Context, aggregateType eh.AggregateType, cmd eh.Command) (eh.Aggregate, error) {
 	if m.Err != nil {
 		return nil, m.Err
 	}
 	m.Context = ctx
-	return m.Aggregates[id], nil
+	return m.Aggregates[cmd.AggregateID()], nil
 }
 
-// Save implements the Save method of the eventhorizon.AggregateStore interface.
-func (m *AggregateStore) Save(ctx context.Context, aggregate eh.Aggregate) error {
+// Store implements the Store method of the eventhorizon.AggregateStore interface.
+func (m *AggregateStore) Store(ctx context.Context, aggregate eh.Aggregate) error {
 	if m.Err != nil {
 		return m.Err
 	}

@@ -1,4 +1,5 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// +build mongodb
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -72,14 +73,14 @@ func TestGetAll(t *testing.T) {
 		t.Error("the body should be correct:", string(w.Body.Bytes()))
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		t.Error("there should be no error:", err)
@@ -97,7 +98,7 @@ func TestGetAll(t *testing.T) {
 	if w.Code != http.StatusOK {
 		t.Error("the status should be correct:", w.Code)
 	}
-	if string(w.Body.Bytes()) != `[{"id":"`+id.String()+`","version":2,"items":[{"id":0,"desc":"desc","completed":false}],"created_at":"`+domain.TimeNow().Format(time.RFC3339Nano)+`","updated_at":"`+domain.TimeNow().Format(time.RFC3339Nano)+`"}]` {
+	if string(w.Body.Bytes()) != `[{"id":"`+id+`","version":2,"items":[{"id":0,"desc":"desc","completed":false}],"created_at":"`+domain.TimeNow().Format(time.RFC3339Nano)+`","updated_at":"`+domain.TimeNow().Format(time.RFC3339Nano)+`"}]` {
 		t.Error("the body should be correct:", string(w.Body.Bytes()))
 	}
 }
@@ -119,9 +120,9 @@ func TestCreate(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	r := httptest.NewRequest("POST", "/api/todos/create",
-		strings.NewReader(`{"id":"`+id.String()+`"}`))
+		strings.NewReader(`{"id":"`+id+`"}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -138,7 +139,7 @@ func TestCreate(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -147,7 +148,7 @@ func TestCreate(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:        id,
+		ID:        eh.ID(id),
 		Version:   1,
 		Items:     []*domain.TodoItem{},
 		CreatedAt: domain.TimeNow(),
@@ -176,15 +177,15 @@ func TestDelete(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/delete",
-		strings.NewReader(`{"id":"`+id.String()+`"}`))
+		strings.NewReader(`{"id":"`+id+`"}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -201,7 +202,7 @@ func TestDelete(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	if _, err := h.Repo.Find(context.Background(), id); err == nil ||
+	if _, err := h.Repo.Find(context.Background(), eh.ID(id)); err == nil ||
 		err.Error() != "could not find entity: not found (default)" {
 		t.Error("there should be a not found error:", err)
 	}
@@ -224,15 +225,15 @@ func TestAddItem(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/add_item",
-		strings.NewReader(`{"id":"`+id.String()+`", "desc":"desc"}`))
+		strings.NewReader(`{"id":"`+id+`", "desc":"desc"}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -249,7 +250,7 @@ func TestAddItem(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -258,7 +259,7 @@ func TestAddItem(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 2,
 		Items: []*domain.TodoItem{
 			{
@@ -292,21 +293,21 @@ func TestRemoveItem(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/remove_item",
-		strings.NewReader(`{"id":"`+id.String()+`", "item_id":0}`))
+		strings.NewReader(`{"id":"`+id+`", "item_id":0}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -323,7 +324,7 @@ func TestRemoveItem(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -332,7 +333,7 @@ func TestRemoveItem(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:        id,
+		ID:        eh.ID(id),
 		Version:   3,
 		Items:     []*domain.TodoItem{},
 		CreatedAt: domain.TimeNow(),
@@ -361,26 +362,26 @@ func TestRemoveCompleted(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "completed",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.CheckItem{
-		ID:      id,
+		ID:      eh.ID(id),
 		ItemID:  1,
 		Checked: true,
 	}); err != nil {
@@ -388,7 +389,7 @@ func TestRemoveCompleted(t *testing.T) {
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/remove_completed",
-		strings.NewReader(`{"id":"`+id.String()+`"}`))
+		strings.NewReader(`{"id":"`+id+`"}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -407,7 +408,7 @@ func TestRemoveCompleted(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -416,7 +417,7 @@ func TestRemoveCompleted(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 5,
 		Items: []*domain.TodoItem{
 			{
@@ -450,21 +451,21 @@ func TestSetItemDesc(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/set_item_desc",
-		strings.NewReader(`{"id":"`+id.String()+`", "desc":"new desc"}`))
+		strings.NewReader(`{"id":"`+id+`", "desc":"new desc"}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -481,7 +482,7 @@ func TestSetItemDesc(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -490,7 +491,7 @@ func TestSetItemDesc(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 3,
 		Items: []*domain.TodoItem{
 			{
@@ -524,27 +525,27 @@ func TestCheckItem(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "completed",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/check_item",
-		strings.NewReader(`{"id":"`+id.String()+`", "item_id":1, "checked":true}`))
+		strings.NewReader(`{"id":"`+id+`", "item_id":1, "checked":true}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -561,7 +562,7 @@ func TestCheckItem(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -570,7 +571,7 @@ func TestCheckItem(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 4,
 		Items: []*domain.TodoItem{
 			{
@@ -609,27 +610,27 @@ func TestCheckAllItems(t *testing.T) {
 		t.Log("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "completed",
 	}); err != nil {
 		t.Error("there should be no error:", err)
 	}
 
 	r := httptest.NewRequest("POST", "/api/todos/check_all_items",
-		strings.NewReader(`{"id":"`+id.String()+`", "item_id":1, "checked":true}`))
+		strings.NewReader(`{"id":"`+id+`", "item_id":1, "checked":true}`))
 	w := httptest.NewRecorder()
 	h.ServeHTTP(w, r)
 	if w.Code != http.StatusOK {
@@ -648,7 +649,7 @@ func TestCheckAllItems(t *testing.T) {
 	defer cancel()
 	l.Wait(ctx)
 
-	m, err := h.Repo.Find(context.Background(), id)
+	m, err := h.Repo.Find(context.Background(), eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -657,7 +658,7 @@ func TestCheckAllItems(t *testing.T) {
 		t.Error("the item should be a todo list")
 	}
 	expected := &domain.TodoList{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 5,
 		Items: []*domain.TodoItem{
 			{

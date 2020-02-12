@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ func TestProjector(t *testing.T) {
 		return time.Date(2017, time.July, 10, 23, 0, 0, 0, time.Local)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	cases := map[string]struct {
 		model         eh.Entity
 		event         eh.Event
@@ -41,15 +41,15 @@ func TestProjector(t *testing.T) {
 		"unhandeled event": {
 			&TodoList{},
 			eh.NewEventForAggregate(eh.EventType("unknown"), nil,
-				TimeNow(), AggregateType, id, 1),
+				TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{},
 			errors.New("could not project event: unknown"),
 		},
 		"created": {
 			&TodoList{},
-			eh.NewEventForAggregate(Created, nil, TimeNow(), AggregateType, id, 1),
+			eh.NewEventForAggregate(Created, nil, TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{
-				ID:        id,
+				ID:        eh.ID(id),
 				Version:   1,
 				Items:     []*TodoItem{},
 				CreatedAt: TimeNow(),
@@ -60,13 +60,13 @@ func TestProjector(t *testing.T) {
 		"deleted": {
 			&TodoList{},
 			eh.NewEventForAggregate(Deleted, nil,
-				TimeNow(), AggregateType, id, 1),
+				TimeNow(), AggregateType, eh.ID(id), 1),
 			nil,
 			nil,
 		},
 		"item added": {
 			&TodoList{
-				ID:        id,
+				ID:        eh.ID(id),
 				Version:   1,
 				Items:     []*TodoItem{},
 				CreatedAt: TimeNow(),
@@ -74,9 +74,9 @@ func TestProjector(t *testing.T) {
 			eh.NewEventForAggregate(ItemAdded, &ItemAddedData{
 				ItemID:      1,
 				Description: "desc 1",
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 2,
 				Items: []*TodoItem{
 					{
@@ -92,7 +92,7 @@ func TestProjector(t *testing.T) {
 		},
 		"item removed": {
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 1,
 				Items: []*TodoItem{
 					{
@@ -110,9 +110,9 @@ func TestProjector(t *testing.T) {
 			},
 			eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 				ItemID: 2,
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 2,
 				Items: []*TodoItem{
 					{
@@ -128,7 +128,7 @@ func TestProjector(t *testing.T) {
 		},
 		"item removed (last)": {
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 1,
 				Items: []*TodoItem{
 					{
@@ -141,9 +141,9 @@ func TestProjector(t *testing.T) {
 			},
 			eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 				ItemID: 1,
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{
-				ID:        id,
+				ID:        eh.ID(id),
 				Version:   2,
 				Items:     []*TodoItem{},
 				CreatedAt: TimeNow(),
@@ -153,7 +153,7 @@ func TestProjector(t *testing.T) {
 		},
 		"item description set": {
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 1,
 				Items: []*TodoItem{
 					{
@@ -172,9 +172,9 @@ func TestProjector(t *testing.T) {
 			eh.NewEventForAggregate(ItemDescriptionSet, &ItemDescriptionSetData{
 				ItemID:      2,
 				Description: "new desc",
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 2,
 				Items: []*TodoItem{
 					{
@@ -195,7 +195,7 @@ func TestProjector(t *testing.T) {
 		},
 		"item checked": {
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 1,
 				Items: []*TodoItem{
 					{
@@ -214,9 +214,9 @@ func TestProjector(t *testing.T) {
 			eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 				ItemID:  2,
 				Checked: true,
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&TodoList{
-				ID:      id,
+				ID:      eh.ID(id),
 				Version: 2,
 				Items: []*TodoItem{
 					{

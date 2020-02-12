@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -38,13 +38,13 @@ func TestEventHandler_CreateModel(t *testing.T) {
 	ctx := context.Background()
 
 	// Driver creates entity.
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	entity := &mocks.SimpleModel{
-		ID: id,
+		ID: eh.ID(id),
 	}
 	repo.LoadErr = eh.RepoError{
 		Err: eh.ErrEntityNotFound,
@@ -74,17 +74,17 @@ func TestEventHandler_UpdateModel(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	entity := &mocks.SimpleModel{
-		ID: id,
+		ID: eh.ID(id),
 	}
 	repo.Entity = entity
 	projector.newEntity = &mocks.SimpleModel{
-		ID:      id,
+		ID:      eh.ID(id),
 		Content: "updated",
 	}
 	if err := handler.HandleEvent(ctx, event); err != nil {
@@ -111,17 +111,17 @@ func TestEventHandler_UpdateModelWithVersion(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	entity := &mocks.Model{
-		ID: id,
+		ID: eh.ID(id),
 	}
 	repo.Entity = entity
 	projector.newEntity = &mocks.Model{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 1,
 		Content: "version 1",
 	}
@@ -149,24 +149,24 @@ func TestEventHandler_UpdateModelWithEventsOutOfOrder(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 3)
+		mocks.AggregateType, eh.ID(id), 3)
 	entity := &mocks.Model{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 1,
 		Content: "version 1",
 	}
 	newEntity := &mocks.Model{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 2,
 		Content: "version 2",
 	}
 	repo.Entity = entity
 	projector.newEntity = &mocks.Model{
-		ID:      id,
+		ID:      eh.ID(id),
 		Version: 3,
 		Content: "version 3",
 	}
@@ -198,13 +198,13 @@ func TestEventHandler_DeleteModel(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	entity := &mocks.SimpleModel{
-		ID: id,
+		ID: eh.ID(id),
 	}
 	repo.Entity = entity
 	projector.newEntity = nil
@@ -233,11 +233,11 @@ func TestEventHandler_LoadError(t *testing.T) {
 	ctx := context.Background()
 
 	// Driver creates entity.
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	loadErr := errors.New("load error")
 	repo.LoadErr = loadErr
 	expectedErr := Error{
@@ -260,11 +260,11 @@ func TestEventHandler_SaveError(t *testing.T) {
 	ctx := context.Background()
 
 	// Driver creates entity.
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	saveErr := errors.New("save error")
 	repo.SaveErr = saveErr
 	expectedErr := Error{
@@ -287,11 +287,11 @@ func TestEventHandler_ProjectError(t *testing.T) {
 	ctx := context.Background()
 
 	// Driver creates entity.
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	projectErr := errors.New("save error")
 	projector.err = projectErr
 	expectedErr := Error{

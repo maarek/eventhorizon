@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,12 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/google/uuid"
 	eh "github.com/looplab/eventhorizon"
 	"github.com/looplab/eventhorizon/aggregatestore/events"
 )
 
 func init() {
-	eh.RegisterAggregate(func(id uuid.UUID) eh.Aggregate {
+	eh.RegisterAggregate(func(id eh.ID) eh.Aggregate {
 		return &Aggregate{
 			AggregateBase: events.NewAggregateBase(AggregateType, id),
 		}

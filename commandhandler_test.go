@@ -1,4 +1,4 @@
-// Copyright (c) 2018 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,8 +18,6 @@ import (
 	"context"
 	"reflect"
 	"testing"
-
-	"github.com/google/uuid"
 )
 
 func TestCommandHandlerMiddleware(t *testing.T) {
@@ -51,6 +49,6 @@ type TestCommand struct{}
 
 var _ = Command(TestCommand{})
 
-func (a TestCommand) AggregateID() uuid.UUID       { return uuid.Nil }
+func (a TestCommand) AggregateID() ID              { return "" }
 func (a TestCommand) AggregateType() AggregateType { return "test" }
 func (a TestCommand) CommandType() CommandType     { return "tes" }

@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package eventhorizon
 import (
 	"context"
 	"errors"
-
-	"github.com/google/uuid"
 )
 
 // EventStoreError is an error in the event store, with the namespace.
@@ -55,7 +53,7 @@ type EventStore interface {
 	Save(ctx context.Context, events []Event, originalVersion int) error
 
 	// Load loads all events for the aggregate id from the store.
-	Load(context.Context, uuid.UUID) ([]Event, error)
+	Load(context.Context, ID) ([]Event, error)
 }
 
 // EventStoreMaintainer is an interface for a maintainer of an EventStore.

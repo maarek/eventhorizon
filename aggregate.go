@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,8 +19,6 @@ import (
 	"errors"
 	"fmt"
 	"sync"
-
-	"github.com/google/uuid"
 )
 
 // ErrAggregateNotFound is when no aggregate can be found.
@@ -50,13 +48,13 @@ type Aggregate interface {
 // AggregateStore is responsible for loading and saving aggregates.
 type AggregateStore interface {
 	// Load loads the most recent version of an aggregate with a type and id.
-	Load(context.Context, AggregateType, uuid.UUID) (Aggregate, error)
+	Load(context.Context, AggregateType, ID) (Aggregate, error)
 
 	// Save saves the uncommittend events for an aggregate.
 	Save(context.Context, Aggregate) error
 }
 
-var aggregates = make(map[AggregateType]func(uuid.UUID) Aggregate)
+var aggregates = make(map[AggregateType]func(ID) Aggregate)
 var aggregatesMu sync.RWMutex
 
 // ErrAggregateNotRegistered is when no aggregate factory was registered.
@@ -66,13 +64,14 @@ var ErrAggregateNotRegistered = errors.New("aggregate not registered")
 // used to create concrete aggregate types when loading from the database.
 //
 // An example would be:
-//     RegisterAggregate(func(id UUID) Aggregate { return &MyAggregate{id} })
-func RegisterAggregate(factory func(uuid.UUID) Aggregate) {
+//     RegisterAggregate(func(id ID) Aggregate { return &MyAggregate{id} })
+func RegisterAggregate(factory func(ID) Aggregate) {
 	// TODO: Explore the use of reflect/gob for creating concrete types without
 	// a factory func.
 
 	// Check that the created aggregate matches the registered type.
-	aggregate := factory(uuid.New())
+	// TODO: What is this doing?
+	aggregate := factory("TEST")
 	if aggregate == nil {
 		panic("eventhorizon: created aggregate is nil")
 	}
@@ -91,7 +90,7 @@ func RegisterAggregate(factory func(uuid.UUID) Aggregate) {
 
 // CreateAggregate creates an aggregate of a type with an ID using the factory
 // registered with RegisterAggregate.
-func CreateAggregate(aggregateType AggregateType, id uuid.UUID) (Aggregate, error) {
+func CreateAggregate(aggregateType AggregateType, id ID) (Aggregate, error) {
 	aggregatesMu.RLock()
 	defer aggregatesMu.RUnlock()
 	if factory, ok := aggregates[aggregateType]; ok {

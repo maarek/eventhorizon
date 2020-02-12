@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -54,14 +54,14 @@ func TestAggregateStore_LoadNotFound(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
+	id := uuid.New().String()
 	repo.LoadErr = eh.RepoError{Err: eh.ErrEntityNotFound}
-	agg, err := store.Load(ctx, AggregateType, id)
+	agg, err := store.Load(ctx, AggregateType, eh.ID(id))
 	if err != nil {
 		t.Fatal("there should be no error:", err)
 	}
-	if agg.EntityID() != id {
-		t.Error("the aggregate ID should be correct: ", agg.EntityID(), id)
+	if agg.EntityID() != eh.ID(id) {
+		t.Error("the aggregate ID should be correct: ", agg.EntityID(), eh.ID(id))
 	}
 }
 
@@ -70,10 +70,10 @@ func TestAggregateStore_Load(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg := NewAggregate(id)
+	id := uuid.New().String()
+	agg := NewAggregate(eh.ID(id))
 	repo.Entity = agg
-	loadedAgg, err := store.Load(ctx, AggregateType, id)
+	loadedAgg, err := store.Load(ctx, AggregateType, eh.ID(id))
 	if err != nil {
 		t.Fatal("there should be no error:", err)
 	}
@@ -83,7 +83,7 @@ func TestAggregateStore_Load(t *testing.T) {
 
 	// Store error.
 	repo.LoadErr = errors.New("error")
-	_, err = store.Load(ctx, AggregateType, id)
+	_, err = store.Load(ctx, AggregateType, eh.ID(id))
 	if err == nil || err.Error() != "error" {
 		t.Error("there should be an error named 'error':", err)
 	}
@@ -95,15 +95,15 @@ func TestAggregateStore_Load_InvalidAggregate(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
+	id := uuid.New().String()
 	err := repo.Save(ctx, &Model{
-		ID: id,
+		ID: eh.ID(id),
 	})
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
 
-	loadedAgg, err := store.Load(ctx, AggregateType, id)
+	loadedAgg, err := store.Load(ctx, AggregateType, eh.ID(id))
 	if err != ErrInvalidAggregate {
 		t.Fatal("there should be a ErrInvalidAggregate error:", err)
 	}
@@ -117,8 +117,8 @@ func TestAggregateStore_Save(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg := NewAggregate(id)
+	id := uuid.New().String()
+	agg := NewAggregate(eh.ID(id))
 	err := store.Save(ctx, agg)
 	if err != nil {
 		t.Error("there should be no error:", err)
@@ -140,8 +140,8 @@ func TestAggregateStore_SaveWithPublish(t *testing.T) {
 	store, repo, bus := createStore(t)
 
 	ctx := context.Background()
-	id := uuid.New()
-	agg := NewAggregate(id)
+	id := uuid.New().String()
+	agg := NewAggregate(eh.ID(id))
 	event := eh.NewEvent("test", nil, time.Now())
 
 	// Normal publish should publish events on the bus.
@@ -201,7 +201,7 @@ const (
 type Aggregate struct {
 	SliceEventPublisher
 
-	ID       uuid.UUID
+	ID       eh.ID
 	Commands []eh.Command
 	Context  context.Context
 	// Used to simulate errors in HandleCommand.
@@ -211,7 +211,7 @@ type Aggregate struct {
 var _ = eh.Aggregate(&Aggregate{})
 
 // NewAggregate returns a new Aggregate.
-func NewAggregate(id uuid.UUID) *Aggregate {
+func NewAggregate(id eh.ID) *Aggregate {
 	return &Aggregate{
 		ID:       id,
 		Commands: []eh.Command{},
@@ -220,7 +220,7 @@ func NewAggregate(id uuid.UUID) *Aggregate {
 
 // EntityID implements the EntityID method of the eventhorizon.Entity and
 // eventhorizon.Aggregate interface.
-func (a *Aggregate) EntityID() uuid.UUID {
+func (a *Aggregate) EntityID() eh.ID {
 	return a.ID
 }
 
@@ -242,7 +242,7 @@ func (a *Aggregate) HandleCommand(ctx context.Context, cmd eh.Command) error {
 
 // AggregateOther is a mocked eventhorizon.Aggregate, useful in testing.
 type AggregateOther struct {
-	ID       uuid.UUID
+	ID       eh.ID
 	Commands []eh.Command
 	Context  context.Context
 	// Used to simulate errors in HandleCommand.
@@ -251,12 +251,12 @@ type AggregateOther struct {
 
 // Model is a mocked read model.
 type Model struct {
-	ID uuid.UUID
+	ID eh.ID
 }
 
 var _ = eh.Entity(&Model{})
 
 // EntityID implements the EntityID method of the eventhorizon.Entity interface.
-func (m *Model) EntityID() uuid.UUID {
+func (m *Model) EntityID() eh.ID {
 	return m.ID
 }

@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ func TestCommandHandler_Immediate(t *testing.T) {
 	m, _ := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	if err := h.HandleCommand(context.Background(), cmd); err != nil {
@@ -47,7 +47,7 @@ func TestCommandHandler_Delayed(t *testing.T) {
 	m, _ := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	c := CommandWithExecuteTime(cmd, time.Now().Add(5*time.Millisecond))
@@ -68,7 +68,7 @@ func TestCommandHandler_ZeroTime(t *testing.T) {
 	m, _ := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	c := CommandWithExecuteTime(cmd, time.Time{})
@@ -88,7 +88,7 @@ func TestCommandHandler_Errors(t *testing.T) {
 	m, errCh := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	c := CommandWithExecuteTime(cmd, time.Now().Add(5*time.Millisecond))
@@ -116,7 +116,7 @@ func TestCommandHandler_ContextCanceled(t *testing.T) {
 	m, errCh := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	c := CommandWithExecuteTime(cmd, time.Now().Add(5*time.Millisecond))
@@ -146,7 +146,7 @@ func TestCommandHandler_ContextDeadline(t *testing.T) {
 	m, errCh := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	c := CommandWithExecuteTime(cmd, time.Now().Add(5*time.Millisecond))

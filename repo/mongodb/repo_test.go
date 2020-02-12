@@ -1,4 +1,5 @@
-// Copyright (c) 2015 - The Event Horizon authors
+// +build mongodb
+// Copyright (c) 2020 - The Event Horizon authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -80,7 +81,7 @@ func TestReadRepo(t *testing.T) {
 func extraRepoTests(t *testing.T, ctx context.Context, r *Repo) {
 	// Insert a custom item.
 	modelCustom := &mocks.Model{
-		ID:        uuid.New(),
+		ID:        eh.ID(uuid.New().String()),
 		Content:   "modelCustom",
 		CreatedAt: time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
 	}
@@ -125,7 +126,7 @@ func extraRepoTests(t *testing.T, ctx context.Context, r *Repo) {
 	}
 
 	modelCustom2 := &mocks.Model{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "modelCustom2",
 	}
 	if err := r.Collection(ctx, func(c *mgo.Collection) error {

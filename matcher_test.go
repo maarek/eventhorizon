@@ -1,4 +1,4 @@
-// Copyright (c) 2018 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package eventhorizon
 import (
 	"testing"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 func TestMatchAny(t *testing.T) {
@@ -60,12 +58,12 @@ func TestMatchAggregate(t *testing.T) {
 		t.Error("match aggregate should not match nil event")
 	}
 
-	e := NewEventForAggregate("test", nil, time.Now(), at, uuid.Nil, 0)
+	e := NewEventForAggregate("test", nil, time.Now(), at, ID(""), 0)
 	if !m(e) {
 		t.Error("match aggregate should match the event")
 	}
 
-	e = NewEventForAggregate("test", nil, time.Now(), "other", uuid.Nil, 0)
+	e = NewEventForAggregate("test", nil, time.Now(), "other", ID(""), 0)
 	if m(e) {
 		t.Error("match aggregate should not match the event")
 	}

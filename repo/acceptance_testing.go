@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,7 +37,8 @@ import (
 //
 func AcceptanceTest(t *testing.T, ctx context.Context, repo eh.ReadWriteRepo) {
 	// Find non-existing item.
-	entity, err := repo.Find(ctx, uuid.New())
+	id := uuid.New().String()
+	entity, err := repo.Find(ctx, eh.ID(id))
 	if rrErr, ok := err.(eh.RepoError); !ok || rrErr.Err != eh.ErrEntityNotFound {
 		t.Error("there should be a ErrEntityNotFound error:", err)
 	}
@@ -66,7 +67,7 @@ func AcceptanceTest(t *testing.T, ctx context.Context, repo eh.ReadWriteRepo) {
 
 	// Save and find one item.
 	entity1 := &mocks.Model{
-		ID:        uuid.New(),
+		ID:        eh.ID(uuid.New().String()),
 		Content:   "entity1",
 		CreatedAt: time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
 	}
@@ -112,7 +113,7 @@ func AcceptanceTest(t *testing.T, ctx context.Context, repo eh.ReadWriteRepo) {
 
 	// Save with another ID.
 	entity2 := &mocks.Model{
-		ID:        uuid.New(),
+		ID:        eh.ID(uuid.New().String()),
 		Content:   "entity2",
 		CreatedAt: time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC),
 	}

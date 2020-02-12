@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -64,8 +64,8 @@ func TestAggregateStore_LoadNoEvents(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg, err := store.Load(ctx, TestAggregateType, id)
+	id := uuid.New().String()
+	agg, err := store.Load(ctx, TestAggregateType, eh.ID(id))
 	if err != nil {
 		t.Fatal("there should be no error:", err)
 	}
@@ -73,8 +73,8 @@ func TestAggregateStore_LoadNoEvents(t *testing.T) {
 	if !ok {
 		t.Fatal("the aggregate shoud be of correct type")
 	}
-	if a.EntityID() != id {
-		t.Error("the aggregate ID should be correct: ", a.EntityID(), id)
+	if a.EntityID() != eh.ID(id) {
+		t.Error("the aggregate ID should be correct: ", a.EntityID(), eh.ID(id))
 	}
 	if a.Version() != 0 {
 		t.Error("the version should be 0:", a.Version())
@@ -86,8 +86,8 @@ func TestAggregateStore_LoadEvents(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg := NewTestAggregate(id)
+	id := uuid.New().String()
+	agg := NewTestAggregate(eh.ID(id))
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event1 := agg.StoreEvent(mocks.EventType, &mocks.EventData{Content: "event1"}, timestamp)
 	if err := eventStore.Save(ctx, []eh.Event{event1}, 0); err != nil {
@@ -95,7 +95,7 @@ func TestAggregateStore_LoadEvents(t *testing.T) {
 	}
 	t.Log(eventStore.Events)
 
-	loaded, err := store.Load(ctx, TestAggregateType, id)
+	loaded, err := store.Load(ctx, TestAggregateType, eh.ID(id))
 	if err != nil {
 		t.Fatal("there should be no error:", err)
 	}
@@ -103,8 +103,8 @@ func TestAggregateStore_LoadEvents(t *testing.T) {
 	if !ok {
 		t.Fatal("the aggregate shoud be of correct type")
 	}
-	if a.EntityID() != id {
-		t.Error("the aggregate ID should be correct: ", a.EntityID(), id)
+	if a.EntityID() != eh.ID(id) {
+		t.Error("the aggregate ID should be correct: ", a.EntityID(), eh.ID(id))
 	}
 	if a.Version() != 1 {
 		t.Error("the version should be 1:", a.Version())
@@ -115,7 +115,7 @@ func TestAggregateStore_LoadEvents(t *testing.T) {
 
 	// Store error.
 	eventStore.Err = errors.New("error")
-	_, err = store.Load(ctx, TestAggregateType, id)
+	_, err = store.Load(ctx, TestAggregateType, eh.ID(id))
 	if err == nil || err.Error() != "error" {
 		t.Error("there should be an error named 'error':", err)
 	}
@@ -127,22 +127,22 @@ func TestAggregateStore_LoadEvents_MismatchedEventType(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg := NewTestAggregate(id)
+	id := uuid.New().String()
+	agg := NewTestAggregate(eh.ID(id))
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event1 := agg.StoreEvent(mocks.EventType, &mocks.EventData{Content: "event"}, timestamp)
 	if err := eventStore.Save(ctx, []eh.Event{event1}, 0); err != nil {
 		t.Fatal("there should be no error:", err)
 	}
 
-	otherAggregateID := uuid.New()
-	otherAgg := NewTestAggregateOther(otherAggregateID)
+	otherAggregateID := uuid.New().String()
+	otherAgg := NewTestAggregateOther(eh.ID(otherAggregateID))
 	event2 := otherAgg.StoreEvent(mocks.EventOtherType, &mocks.EventData{Content: "event2"}, timestamp)
 	if err := eventStore.Save(ctx, []eh.Event{event2}, 0); err != nil {
 		t.Fatal("there should be no error:", err)
 	}
 
-	loaded, err := store.Load(ctx, TestAggregateType, otherAggregateID)
+	loaded, err := store.Load(ctx, TestAggregateType, eh.ID(otherAggregateID))
 	if err != ErrMismatchedEventType {
 		t.Fatal("there should be a ErrMismatchedEventType error:", err)
 	}
@@ -156,8 +156,8 @@ func TestAggregateStore_SaveEvents(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg := NewTestAggregateOther(id)
+	id := uuid.New().String()
+	agg := NewTestAggregateOther(eh.ID(id))
 	err := store.Save(ctx, agg)
 	if err != nil {
 		t.Error("there should be no error:", err)
@@ -170,7 +170,7 @@ func TestAggregateStore_SaveEvents(t *testing.T) {
 		t.Error("there should be no error:", err)
 	}
 
-	events, err := eventStore.Load(ctx, id)
+	events, err := eventStore.Load(ctx, eh.ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -223,8 +223,8 @@ func TestAggregateStore_AggregateNotRegistered(t *testing.T) {
 
 	ctx := context.Background()
 
-	id := uuid.New()
-	agg, err := store.Load(ctx, "TestAggregate3", id)
+	id := uuid.New().String()
+	agg, err := store.Load(ctx, "TestAggregate3", eh.ID(id))
 	if err != eh.ErrAggregateNotRegistered {
 		t.Error("there should be a eventhorizon.ErrAggregateNotRegistered error:", err)
 	}
@@ -251,7 +251,7 @@ func createStore(t *testing.T) (*AggregateStore, *mocks.EventStore, *mocks.Event
 }
 
 func init() {
-	eh.RegisterAggregate(func(id uuid.UUID) eh.Aggregate {
+	eh.RegisterAggregate(func(id eh.ID) eh.Aggregate {
 		return NewTestAggregateOther(id)
 	})
 }
@@ -265,7 +265,7 @@ type TestAggregateOther struct {
 
 var _ = Aggregate(&TestAggregateOther{})
 
-func NewTestAggregateOther(id uuid.UUID) *TestAggregateOther {
+func NewTestAggregateOther(id eh.ID) *TestAggregateOther {
 	return &TestAggregateOther{
 		AggregateBase: NewAggregateBase(TestAggregateOtherType, id),
 	}

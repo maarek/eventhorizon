@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,16 +21,17 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	eh "github.com/looplab/eventhorizon"
 )
 
 func TestModelJSON(t *testing.T) {
-	id := uuid.New()
+	id := uuid.New().String()
 	now := time.Now()
 
 	// Don't use keys for init, we want to get compiler warnings if we haven't
 	// used some fields.
 	l := &TodoList{
-		id,
+		eh.ID(id),
 		1,
 		[]*TodoItem{
 			{
@@ -50,7 +51,7 @@ func TestModelJSON(t *testing.T) {
 
 	var expectedJSONStr = []byte(`
 {
-	"id": "` + id.String() + `",
+	"id": "` + id + `",
 	"version": 1,
 	"items": [
 		{

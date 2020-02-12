@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package domain
 import (
 	"time"
 
-	"github.com/google/uuid"
 	eh "github.com/looplab/eventhorizon"
 )
 
@@ -30,7 +29,7 @@ type TodoItem struct {
 
 // TodoList is the read model for the todo list.
 type TodoList struct {
-	ID        uuid.UUID   `json:"id"         bson:"_id"`
+	ID        eh.ID       `json:"id"         bson:"_id"`
 	Version   int         `json:"version"    bson:"version"`
 	Items     []*TodoItem `json:"items"      bson:"items"`
 	CreatedAt time.Time   `json:"created_at" bson:"created_at"`
@@ -41,7 +40,7 @@ var _ = eh.Entity(&TodoList{})
 var _ = eh.Versionable(&TodoList{})
 
 // EntityID implements the EntityID method of the eventhorizon.Entity interface.
-func (t *TodoList) EntityID() uuid.UUID {
+func (t *TodoList) EntityID() eh.ID {
 	return t.ID
 }
 

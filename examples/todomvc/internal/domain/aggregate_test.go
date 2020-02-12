@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		return time.Date(2017, time.July, 10, 23, 0, 0, 0, time.Local)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	cases := map[string]struct {
 		agg            *Aggregate
 		cmd            eh.Command
@@ -42,11 +42,11 @@ func TestAggregateHandleCommand(t *testing.T) {
 	}{
 		"unknown command": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 			},
 			&mocks.Command{
-				ID:      id,
+				ID:      eh.ID(id),
 				Content: "testcontent",
 			},
 			nil,
@@ -54,20 +54,20 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"create": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 			},
 			&Create{
-				ID: id,
+				ID: eh.ID(id),
 			},
 			[]eh.Event{
 				eh.NewEventForAggregate(Created, nil,
-					TimeNow(), AggregateType, id, 1),
+					TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"create (already created)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 			},
 			&Create{},
@@ -76,19 +76,19 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"delete": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 			},
 			&Delete{},
 			[]eh.Event{
 				eh.NewEventForAggregate(Deleted, nil,
-					TimeNow(), AggregateType, id, 1),
+					TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"delete (not created)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 			},
 			&Delete{},
 			nil,
@@ -96,7 +96,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"add item": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				nextItemID:    1,
 			},
@@ -107,13 +107,13 @@ func TestAggregateHandleCommand(t *testing.T) {
 				eh.NewEventForAggregate(ItemAdded, &ItemAddedData{
 					ItemID:      1,
 					Description: "desc",
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"remove item": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -129,13 +129,13 @@ func TestAggregateHandleCommand(t *testing.T) {
 			[]eh.Event{
 				eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 					ItemID: 1,
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"remove item (non existing)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -153,7 +153,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"remove completed items": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -177,16 +177,16 @@ func TestAggregateHandleCommand(t *testing.T) {
 			[]eh.Event{
 				eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 					ItemID: 1,
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 				eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 					ItemID: 3,
-				}, TimeNow(), AggregateType, id, 2),
+				}, TimeNow(), AggregateType, eh.ID(id), 2),
 			},
 			nil,
 		},
 		"set item description": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -204,13 +204,13 @@ func TestAggregateHandleCommand(t *testing.T) {
 				eh.NewEventForAggregate(ItemDescriptionSet, &ItemDescriptionSetData{
 					ItemID:      1,
 					Description: "new desc",
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"set item description (non existing)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -229,7 +229,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"set item description (no change)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -248,7 +248,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"check item": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -266,13 +266,13 @@ func TestAggregateHandleCommand(t *testing.T) {
 				eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 					ItemID:  1,
 					Checked: true,
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"uncheck item": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -290,13 +290,13 @@ func TestAggregateHandleCommand(t *testing.T) {
 				eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 					ItemID:  1,
 					Checked: false,
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
 		"check item (non exsisting)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -315,7 +315,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"check item (no change)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -334,7 +334,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 		},
 		"check all items": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -361,17 +361,17 @@ func TestAggregateHandleCommand(t *testing.T) {
 				eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 					ItemID:  1,
 					Checked: true,
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 				eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 					ItemID:  3,
 					Checked: true,
-				}, TimeNow(), AggregateType, id, 2),
+				}, TimeNow(), AggregateType, eh.ID(id), 2),
 			},
 			nil,
 		},
 		"uncheck all items": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 				items: []*TodoItem{
 					{
@@ -398,7 +398,7 @@ func TestAggregateHandleCommand(t *testing.T) {
 				eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 					ItemID:  2,
 					Checked: false,
-				}, TimeNow(), AggregateType, id, 1),
+				}, TimeNow(), AggregateType, eh.ID(id), 1),
 			},
 			nil,
 		},
@@ -431,7 +431,7 @@ func TestAggregateApplyEvent(t *testing.T) {
 		return time.Date(2017, time.July, 10, 23, 0, 0, 0, time.Local)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	cases := map[string]struct {
 		agg         *Aggregate
 		event       eh.Event
@@ -440,50 +440,50 @@ func TestAggregateApplyEvent(t *testing.T) {
 	}{
 		"unhandeled event": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 			},
 			eh.NewEventForAggregate(eh.EventType("unknown"), nil,
-				TimeNow(), AggregateType, id, 1),
+				TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 			},
 			errors.New("could not apply event: unknown"),
 		},
 		"created": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 			},
 			eh.NewEventForAggregate(Created, nil,
-				TimeNow(), AggregateType, id, 1),
+				TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 			},
 			nil,
 		},
 		"deleted": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				created:       true,
 			},
 			eh.NewEventForAggregate(Deleted, nil,
-				TimeNow(), AggregateType, id, 1),
+				TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 			},
 			nil,
 		},
 		"item added": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				nextItemID:    1,
 			},
 			eh.NewEventForAggregate(ItemAdded, &ItemAddedData{
 				ItemID:      1,
 				Description: "desc 1",
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				nextItemID:    2,
 				items: []*TodoItem{
 					{
@@ -497,7 +497,7 @@ func TestAggregateApplyEvent(t *testing.T) {
 		},
 		"item removed": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,
@@ -513,9 +513,9 @@ func TestAggregateApplyEvent(t *testing.T) {
 			},
 			eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 				ItemID: 2,
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,
@@ -528,7 +528,7 @@ func TestAggregateApplyEvent(t *testing.T) {
 		},
 		"item removed (last)": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,
@@ -539,16 +539,16 @@ func TestAggregateApplyEvent(t *testing.T) {
 			},
 			eh.NewEventForAggregate(ItemRemoved, &ItemRemovedData{
 				ItemID: 1,
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items:         []*TodoItem{},
 			},
 			nil,
 		},
 		"item description set": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,
@@ -565,9 +565,9 @@ func TestAggregateApplyEvent(t *testing.T) {
 			eh.NewEventForAggregate(ItemDescriptionSet, &ItemDescriptionSetData{
 				ItemID:      2,
 				Description: "new desc",
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,
@@ -585,7 +585,7 @@ func TestAggregateApplyEvent(t *testing.T) {
 		},
 		"item checked": {
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,
@@ -602,9 +602,9 @@ func TestAggregateApplyEvent(t *testing.T) {
 			eh.NewEventForAggregate(ItemChecked, &ItemCheckedData{
 				ItemID:  2,
 				Checked: true,
-			}, TimeNow(), AggregateType, id, 1),
+			}, TimeNow(), AggregateType, eh.ID(id), 1),
 			&Aggregate{
-				AggregateBase: events.NewAggregateBase(AggregateType, id),
+				AggregateBase: events.NewAggregateBase(AggregateType, eh.ID(id)),
 				items: []*TodoItem{
 					{
 						ID:          1,

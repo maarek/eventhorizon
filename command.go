@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,8 +20,6 @@ import (
 	"reflect"
 	"sync"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 // Command is a domain command that is sent to a Dispatcher.
@@ -35,7 +33,7 @@ import (
 type Command interface {
 	// AggregateID returns the ID of the aggregate that the command should be
 	// handled by.
-	AggregateID() uuid.UUID
+	AggregateID() ID
 
 	// AggregateType returns the type of the aggregate that the command can be
 	// handled by.

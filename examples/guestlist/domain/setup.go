@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package domain
 import (
 	"log"
 
-	"github.com/google/uuid"
 	eh "github.com/looplab/eventhorizon"
 	"github.com/looplab/eventhorizon/aggregatestore/events"
 	"github.com/looplab/eventhorizon/commandhandler/aggregate"
@@ -32,7 +31,7 @@ func Setup(
 	eventBus eh.EventBus,
 	commandBus *bus.CommandHandler,
 	invitationRepo, guestListRepo eh.ReadWriteRepo,
-	eventID uuid.UUID) {
+	eventID eh.ID) {
 
 	// Add a logger as an observer.
 	eventBus.AddObserver(eh.MatchAny(), &Logger{})

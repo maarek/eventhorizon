@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ func TestReadRepo(t *testing.T) {
 
 func extraRepoTests(t *testing.T, ctx context.Context) {
 	simpleModel := &mocks.SimpleModel{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "simpleModel",
 	}
 

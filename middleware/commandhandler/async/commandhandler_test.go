@@ -1,4 +1,4 @@
-// Copyright (c) 2018 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import (
 
 func TestCommandHandler(t *testing.T) {
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 

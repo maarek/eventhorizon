@@ -1,4 +1,4 @@
-// Copyright (c) 2016 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,9 +41,9 @@ func TestNewEvent(t *testing.T) {
 		t.Error("the string representation should be correct:", event.String())
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	event = NewEventForAggregate(TestEventType, &TestEventData{"event1"}, timestamp,
-		TestAggregateType, id, 3)
+		TestAggregateType, ID(id), 3)
 	if event.EventType() != TestEventType {
 		t.Error("the event type should be correct:", event.EventType())
 	}
@@ -56,7 +56,7 @@ func TestNewEvent(t *testing.T) {
 	if event.AggregateType() != TestAggregateType {
 		t.Error("the aggregate type should be correct:", event.AggregateType())
 	}
-	if event.AggregateID() != id {
+	if event.AggregateID() != ID(id) {
 		t.Error("the aggregate ID should be correct:", event.AggregateID())
 	}
 	if event.Version() != 3 {

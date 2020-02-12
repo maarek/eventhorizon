@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,11 +27,11 @@ import (
 )
 
 func TestEventHandler(t *testing.T) {
-	id := uuid.New()
+	id := uuid.New().String()
 	eventData := &mocks.EventData{Content: "event1"}
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event := eh.NewEventForAggregate(mocks.EventType, eventData, timestamp,
-		mocks.AggregateType, id, 1)
+		mocks.AggregateType, eh.ID(id), 1)
 
 	inner := mocks.NewEventHandler("test")
 	m, errCh := NewMiddleware()

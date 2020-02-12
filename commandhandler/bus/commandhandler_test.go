@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,7 +33,7 @@ func TestCommandHandler(t *testing.T) {
 	ctx := context.WithValue(context.Background(), "testkey", "testval")
 
 	t.Log("handle with no handler")
-	cmd := &mocks.Command{ID: uuid.New(), Content: "command1"}
+	cmd := &mocks.Command{ID: eh.ID(uuid.New().String()), Content: "command1"}
 	err := bus.HandleCommand(ctx, cmd)
 	if err != ErrHandlerNotFound {
 		t.Error("there should be a ErrHandlerNotFound error:", err)

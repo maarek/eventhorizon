@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/google/uuid"
+	eh "github.com/looplab/eventhorizon"
 	"github.com/looplab/eventhorizon/examples/todomvc/internal/domain"
 	"github.com/looplab/eventhorizon/repo/mongodb"
 )
@@ -38,14 +39,14 @@ func main() {
 		log.Println("could not clear DB:", err)
 	}
 
-	id := uuid.New()
+	id := uuid.New().String()
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.Create{
-		ID: id,
+		ID: eh.ID(id),
 	}); err != nil {
 		log.Fatal("there should be no error:", err)
 	}
 	if err := h.CommandHandler.HandleCommand(context.Background(), &domain.AddItem{
-		ID:          id,
+		ID:          eh.ID(id),
 		Description: "desc",
 	}); err != nil {
 		log.Fatal("there should be no error:", err)

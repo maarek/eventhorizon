@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,9 +30,10 @@ func TestEventHandler(t *testing.T) {
 	h := NewEventHandler()
 
 	// Event should match when waiting.
+	id := uuid.New().String()
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	expectedEvent := eh.NewEventForAggregate(
-		mocks.EventType, nil, timestamp, mocks.AggregateType, uuid.New(), 1,
+		mocks.EventType, nil, timestamp, mocks.AggregateType, eh.ID(id), 1,
 	)
 	go func() {
 		time.Sleep(time.Millisecond)
@@ -58,8 +59,9 @@ func TestEventHandler(t *testing.T) {
 	}
 
 	// Other events should not match.
+	id = uuid.New().String()
 	otherEvent := eh.NewEventForAggregate(mocks.EventOtherType, nil, timestamp,
-		mocks.AggregateType, uuid.New(), 1)
+		mocks.AggregateType, eh.ID(id), 1)
 	go func() {
 		time.Sleep(time.Millisecond)
 		h.HandleEvent(context.Background(), otherEvent)

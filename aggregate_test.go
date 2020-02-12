@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,17 +22,17 @@ import (
 )
 
 func TestCreateAggregate(t *testing.T) {
-	id := uuid.New()
-	aggregate, err := CreateAggregate(TestAggregateRegisterType, id)
+	id := uuid.New().String()
+	aggregate, err := CreateAggregate(TestAggregateRegisterType, ID(id))
 	if err != ErrAggregateNotRegistered {
 		t.Error("there should be a aggregate not registered error:", err)
 	}
 
-	RegisterAggregate(func(id uuid.UUID) Aggregate {
+	RegisterAggregate(func(id ID) Aggregate {
 		return &TestAggregateRegister{id: id}
 	})
 
-	aggregate, err = CreateAggregate(TestAggregateRegisterType, id)
+	aggregate, err = CreateAggregate(TestAggregateRegisterType, ID(id))
 	if err != nil {
 		t.Error("there should be no error:", err)
 	}
@@ -40,7 +40,7 @@ func TestCreateAggregate(t *testing.T) {
 	if aggregate.AggregateType() != TestAggregateRegisterType {
 		t.Error("the aggregate type should be correct:", aggregate.AggregateType())
 	}
-	if aggregate.EntityID() != id {
+	if aggregate.EntityID() != ID(id) {
 		t.Error("the ID should be correct:", aggregate.EntityID())
 	}
 }
@@ -51,7 +51,7 @@ func TestRegisterAggregateEmptyName(t *testing.T) {
 			t.Error("there should have been a panic:", r)
 		}
 	}()
-	RegisterAggregate(func(id uuid.UUID) Aggregate {
+	RegisterAggregate(func(id ID) Aggregate {
 		return &TestAggregateRegisterEmpty{id: id}
 	})
 }
@@ -62,7 +62,7 @@ func TestRegisterAggregateNil(t *testing.T) {
 			t.Error("there should have been a panic:", r)
 		}
 	}()
-	RegisterAggregate(func(id uuid.UUID) Aggregate { return nil })
+	RegisterAggregate(func(id ID) Aggregate { return nil })
 }
 
 func TestRegisterAggregateTwice(t *testing.T) {
@@ -71,10 +71,10 @@ func TestRegisterAggregateTwice(t *testing.T) {
 			t.Error("there should have been a panic:", r)
 		}
 	}()
-	RegisterAggregate(func(id uuid.UUID) Aggregate {
+	RegisterAggregate(func(id ID) Aggregate {
 		return &TestAggregateRegisterTwice{id: id}
 	})
-	RegisterAggregate(func(id uuid.UUID) Aggregate {
+	RegisterAggregate(func(id ID) Aggregate {
 		return &TestAggregateRegisterTwice{id: id}
 	})
 }
@@ -86,12 +86,12 @@ const (
 )
 
 type TestAggregateRegister struct {
-	id uuid.UUID
+	id ID
 }
 
 var _ = Aggregate(&TestAggregateRegister{})
 
-func (a *TestAggregateRegister) EntityID() uuid.UUID { return a.id }
+func (a *TestAggregateRegister) EntityID() ID { return a.id }
 
 func (a *TestAggregateRegister) AggregateType() AggregateType {
 	return TestAggregateRegisterType
@@ -101,12 +101,12 @@ func (a *TestAggregateRegister) HandleCommand(ctx context.Context, cmd Command) 
 }
 
 type TestAggregateRegisterEmpty struct {
-	id uuid.UUID
+	id ID
 }
 
 var _ = Aggregate(&TestAggregateRegisterEmpty{})
 
-func (a *TestAggregateRegisterEmpty) EntityID() uuid.UUID { return a.id }
+func (a *TestAggregateRegisterEmpty) EntityID() ID { return a.id }
 
 func (a *TestAggregateRegisterEmpty) AggregateType() AggregateType {
 	return TestAggregateRegisterEmptyType
@@ -116,12 +116,12 @@ func (a *TestAggregateRegisterEmpty) HandleCommand(ctx context.Context, cmd Comm
 }
 
 type TestAggregateRegisterTwice struct {
-	id uuid.UUID
+	id ID
 }
 
 var _ = Aggregate(&TestAggregateRegisterTwice{})
 
-func (a *TestAggregateRegisterTwice) EntityID() uuid.UUID { return a.id }
+func (a *TestAggregateRegisterTwice) EntityID() ID { return a.id }
 
 func (a *TestAggregateRegisterTwice) AggregateType() AggregateType {
 	return TestAggregateRegisterTwiceType

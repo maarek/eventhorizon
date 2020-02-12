@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,13 +20,12 @@ import (
 	"log"
 	"time"
 
-	"github.com/google/uuid"
 	eh "github.com/looplab/eventhorizon"
 	"github.com/looplab/eventhorizon/aggregatestore/events"
 )
 
 func init() {
-	eh.RegisterAggregate(func(id uuid.UUID) eh.Aggregate {
+	eh.RegisterAggregate(func(id eh.ID) eh.Aggregate {
 		return NewInvitationAggregate(id)
 	})
 }
@@ -55,7 +54,7 @@ type InvitationAggregate struct {
 var _ = eh.Aggregate(&InvitationAggregate{})
 
 // NewInvitationAggregate creates a new InvitationAggregate with an ID.
-func NewInvitationAggregate(id uuid.UUID) *InvitationAggregate {
+func NewInvitationAggregate(id eh.ID) *InvitationAggregate {
 	return &InvitationAggregate{
 		AggregateBase: events.NewAggregateBase(InvitationAggregateType, id),
 	}

@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@ package eventhorizon
 import (
 	"context"
 	"errors"
-
-	"github.com/google/uuid"
 )
 
 // RepoError is an error in the read repository, with the namespace.
@@ -56,7 +54,7 @@ type ReadRepo interface {
 	Parent() ReadRepo
 
 	// Find returns an entity for an ID.
-	Find(context.Context, uuid.UUID) (Entity, error)
+	Find(context.Context, ID) (Entity, error)
 
 	// FindAll returns all entities in the repository.
 	FindAll(context.Context) ([]Entity, error)
@@ -68,7 +66,7 @@ type WriteRepo interface {
 	Save(context.Context, Entity) error
 
 	// Remove removes a entity by ID from the storage.
-	Remove(context.Context, uuid.UUID) error
+	Remove(context.Context, ID) error
 }
 
 // ReadWriteRepo is a combined read and write repo, mainly useful for testing.

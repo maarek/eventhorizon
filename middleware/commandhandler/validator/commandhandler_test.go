@@ -1,4 +1,4 @@
-// Copyright (c) 2017 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ func TestCommandHandler_Immediate(t *testing.T) {
 	m := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	if err := h.HandleCommand(context.Background(), cmd); err != nil {
@@ -46,7 +46,7 @@ func TestCommandHandler_WithValidationError(t *testing.T) {
 	m := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := &mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	e := errors.New("a validation error")
@@ -64,7 +64,7 @@ func TestCommandHandler_WithValidationNoError(t *testing.T) {
 	m := NewMiddleware()
 	h := eh.UseCommandHandlerMiddleware(inner, m)
 	cmd := &mocks.Command{
-		ID:      uuid.New(),
+		ID:      eh.ID(uuid.New().String()),
 		Content: "content",
 	}
 	c := CommandWithValidation(cmd, func() error { return nil })

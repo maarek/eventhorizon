@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -51,13 +51,13 @@ func Example() {
 	guestListRepo := repo.NewRepo()
 
 	// Setup the domain.
-	eventID := uuid.New()
+	eventID := uuid.New().String()
 	domain.Setup(
 		eventStore,
 		eventBus,
 		commandBus,
 		invitationRepo, guestListRepo,
-		eventID,
+		eh.ID(eventID),
 	)
 
 	// Set the namespace to use.
@@ -66,22 +66,22 @@ func Example() {
 	// --- Execute commands on the domain --------------------------------------
 
 	// IDs for all the guests.
-	athenaID := uuid.New()
-	hadesID := uuid.New()
-	zeusID := uuid.New()
-	poseidonID := uuid.New()
+	athenaID := uuid.New().String()
+	hadesID := uuid.New().String()
+	zeusID := uuid.New().String()
+	poseidonID := uuid.New().String()
 
 	// Issue some invitations and responses. Error checking omitted here.
-	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: athenaID, Name: "Athena", Age: 42}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: eh.ID(athenaID), Name: "Athena", Age: 42}); err != nil {
 		log.Println("error:", err)
 	}
-	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: hadesID, Name: "Hades"}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: eh.ID(hadesID), Name: "Hades"}); err != nil {
 		log.Println("error:", err)
 	}
-	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: zeusID, Name: "Zeus"}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: eh.ID(zeusID), Name: "Zeus"}); err != nil {
 		log.Println("error:", err)
 	}
-	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: poseidonID, Name: "Poseidon"}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.CreateInvite{ID: eh.ID(poseidonID), Name: "Poseidon"}); err != nil {
 		log.Println("error:", err)
 	}
 	time.Sleep(100 * time.Millisecond)
@@ -90,24 +90,24 @@ func Example() {
 	// Note that Athena tries to decline the event after first accepting, but
 	// that is not allowed by the domain logic in InvitationAggregate. The
 	// result is that she is still accepted.
-	if err := commandBus.HandleCommand(ctx, &domain.AcceptInvite{ID: athenaID}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.AcceptInvite{ID: eh.ID(athenaID)}); err != nil {
 		log.Println("error:", err)
 	}
-	if err := commandBus.HandleCommand(ctx, &domain.DeclineInvite{ID: athenaID}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.DeclineInvite{ID: eh.ID(athenaID)}); err != nil {
 		// NOTE: This error is supposed to be printed!
 		log.Printf("error: %s\n", err)
 	}
-	if err := commandBus.HandleCommand(ctx, &domain.AcceptInvite{ID: hadesID}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.AcceptInvite{ID: eh.ID(hadesID)}); err != nil {
 		log.Println("error:", err)
 	}
-	if err := commandBus.HandleCommand(ctx, &domain.DeclineInvite{ID: zeusID}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.DeclineInvite{ID: eh.ID(zeusID)}); err != nil {
 		log.Println("error:", err)
 	}
 
 	// Poseidon is a bit late to the party...
 	// TODO: Remove sleeps.
 	time.Sleep(10 * time.Millisecond)
-	if err := commandBus.HandleCommand(ctx, &domain.AcceptInvite{ID: poseidonID}); err != nil {
+	if err := commandBus.HandleCommand(ctx, &domain.AcceptInvite{ID: eh.ID(poseidonID)}); err != nil {
 		log.Println("error:", err)
 	}
 
@@ -134,7 +134,7 @@ func Example() {
 	}
 
 	// Read the guest list.
-	guestList, err := guestListRepo.Find(ctx, eventID)
+	guestList, err := guestListRepo.Find(ctx, eh.ID(eventID))
 	if err != nil {
 		log.Println("error:", err)
 	}

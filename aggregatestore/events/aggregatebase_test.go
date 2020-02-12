@@ -1,4 +1,4 @@
-// Copyright (c) 2014 - The Event Horizon authors.
+// Copyright (c) 2020 - The Event Horizon authors.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,16 +25,16 @@ import (
 )
 
 func TestNewAggregateBase(t *testing.T) {
-	id := uuid.New()
-	agg := NewAggregateBase(TestAggregateType, id)
+	id := uuid.New().String()
+	agg := NewAggregateBase(TestAggregateType, eh.ID(id))
 	if agg == nil {
 		t.Fatal("there should be an aggregate")
 	}
 	if agg.AggregateType() != TestAggregateType {
 		t.Error("the aggregate type should be correct: ", agg.AggregateType(), TestAggregateType)
 	}
-	if agg.EntityID() != id {
-		t.Error("the entity ID should be correct: ", agg.EntityID(), id)
+	if agg.EntityID() != eh.ID(id) {
+		t.Error("the entity ID should be correct: ", agg.EntityID(), eh.ID(id))
 	}
 	if agg.Version() != 0 {
 		t.Error("the version should be 0:", agg.Version())
@@ -42,7 +42,7 @@ func TestNewAggregateBase(t *testing.T) {
 }
 
 func TestAggregateVersion(t *testing.T) {
-	agg := NewAggregateBase(TestAggregateType, uuid.New())
+	agg := NewAggregateBase(TestAggregateType, eh.ID(uuid.New().String()))
 	if agg.Version() != 0 {
 		t.Error("the version should be 0:", agg.Version())
 	}
@@ -54,8 +54,8 @@ func TestAggregateVersion(t *testing.T) {
 }
 
 func TestAggregateEvents(t *testing.T) {
-	id := uuid.New()
-	agg := NewTestAggregate(id)
+	id := uuid.New().String()
+	agg := NewTestAggregate(eh.ID(id))
 	timestamp := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
 	event1 := agg.StoreEvent(TestAggregateEventType, &TestEventData{"event1"}, timestamp)
 	if event1.EventType() != TestAggregateEventType {
@@ -73,7 +73,7 @@ func TestAggregateEvents(t *testing.T) {
 	if event1.AggregateType() != TestAggregateType {
 		t.Error("the aggregate type should be correct:", event1.AggregateType())
 	}
-	if event1.AggregateID() != id {
+	if event1.AggregateID() != eh.ID(id) {
 		t.Error("the aggregate id should be correct:", event1.AggregateID())
 	}
 	if event1.String() != "TestAggregateEvent@1" {
@@ -102,7 +102,7 @@ func TestAggregateEvents(t *testing.T) {
 		t.Error("the version should be 1 after clearing uncommitted events (without applying any):", event3.Version())
 	}
 
-	agg = NewTestAggregate(uuid.New())
+	agg = NewTestAggregate(eh.ID(uuid.New().String()))
 	event1 = agg.StoreEvent(TestAggregateEventType, &TestEventData{"event1"}, timestamp)
 	event2 = agg.StoreEvent(TestAggregateEventType, &TestEventData{"event2"}, timestamp)
 	events = agg.Events()
@@ -118,7 +118,7 @@ func TestAggregateEvents(t *testing.T) {
 }
 
 func init() {
-	eh.RegisterAggregate(func(id uuid.UUID) eh.Aggregate {
+	eh.RegisterAggregate(func(id eh.ID) eh.Aggregate {
 		return NewTestAggregate(id)
 	})
 
@@ -132,13 +132,13 @@ const (
 )
 
 type TestAggregateCommand struct {
-	TestID  uuid.UUID
+	TestID  eh.ID
 	Content string
 }
 
 var _ = eh.Command(TestAggregateCommand{})
 
-func (t TestAggregateCommand) AggregateID() uuid.UUID          { return t.TestID }
+func (t TestAggregateCommand) AggregateID() eh.ID              { return t.TestID }
 func (t TestAggregateCommand) AggregateType() eh.AggregateType { return TestAggregateType }
 func (t TestAggregateCommand) CommandType() eh.CommandType     { return TestAggregateCommandType }
 
@@ -153,9 +153,9 @@ type TestAggregate struct {
 
 var _ = Aggregate(&TestAggregate{})
 
-func NewTestAggregate(id uuid.UUID) *TestAggregate {
+func NewTestAggregate(id eh.ID) *TestAggregate {
 	return &TestAggregate{
-		AggregateBase: NewAggregateBase(TestAggregateType, id),
+		AggregateBase: NewAggregateBase(TestAggregateType, eh.ID(id)),
 	}
 }
 
